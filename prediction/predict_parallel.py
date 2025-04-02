@@ -131,15 +131,12 @@ def get_data():
     return sequence,LB_exp,M9_exp,control,record_dict,record_average
 
 sequence,LB_exp,M9_exp,control,record_dict,record_average = get_data()
-# 去除诱导前表达量
 LB_exp = np.array(LB_exp) - np.array(control)
 M9_exp = np.array(M9_exp) - np.array(control)
 
-# 将数值变为正
 LB_exp = LB_exp - min(LB_exp) + 1
 M9_exp = M9_exp - min(M9_exp) + 1
 
-# 取log值,预防梯度爆炸
 LB_exp = np.log2(LB_exp)
 M9_exp = np.log2(M9_exp)
 sequence_onehot = seq2onehot(sequence)
