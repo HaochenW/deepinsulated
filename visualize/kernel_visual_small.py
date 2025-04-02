@@ -142,7 +142,7 @@ def read_experiment3():
 
 if __name__ == '__main__': 
     # Load the model
-    weight_path = '../weight/weight_CNN_control.h5'
+    weight_path = '../weight/weight_CNN_K1_5.h5'
     model = CNN_model_small(promoter_length = 31)
     model.load_weights(weight_path)
     
