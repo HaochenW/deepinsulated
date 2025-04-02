@@ -245,11 +245,8 @@ if __name__ == '__main__':
     plt.hist(record_distance_experiment, bins=np.arange(0,18)+0.5, facecolor="red", edgecolor="black", alpha=0.7, density=True, label = 'origin_' + str(len(sequence)))
     plt.hist(record_distance_random, bins=np.arange(0,18)+0.5, facecolor="orange", edgecolor="black", alpha=0.7, density=True, label = 'random_optimized_' + str(len(seq_list)))
     plt.locator_params(axis='x', integer=True)
-    # 显示横轴标签
     plt.xlabel("Distance Range")
-    # 显示纵轴标签
     plt.ylabel("Frequency Distribution")
-    # 显示图标题
     plt.title("Frequency Distribution Picture")
     plt.legend()
     plt.savefig('Frequency Distribution Picture.png')
