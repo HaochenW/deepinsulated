@@ -82,7 +82,7 @@ statsmodels==0.13.1
 threadpoolctl==2.2.0
 tifffile==2021.11.2
 tokenizers==0.10.3
-tensorflow-gpu=2.10.0
+tensorflow-gpu=1.10.0
 keras=2.1.0
 tqdm==4.61.2
 transformers==4.8.2
