@@ -26,7 +26,7 @@ Remarkably, the landscape accurately depicted the transcriptional activity of th
 **Env Requirements:** 
 - MAC OS, Linux or Windows.
 - Python 3.5+.
-- Tensorflow 2.10.0 + keras 2.1.0
+- Tensorflow 1.10.0 + keras 2.1.0
 - CUDA 1.10.0  if you need train deep learning model with gpu.
 
 **Steps of using DeepInsulated:** 
