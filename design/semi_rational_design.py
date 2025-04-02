@@ -107,7 +107,7 @@ def get_data():
     plt.figure(0)
     for i in range(15):
         dict_name = 'file_' + str(i)
-        file = pd.read_excel(open('./data/deal_data_.xlsx', 'rb'),
+        file = pd.read_excel(open('../data/deal_data_.xlsx', 'rb'),
                   sheet_name = str(i+1) + '-1-94')  
         file = file.dropna(subset=['Tube Name:'])
         record_dict[dict_name] = file
@@ -166,7 +166,7 @@ def predict(sequence_onehot):
     result_M9 = model.predict(sequence_onehot, verbose=0)[:,0]
     result_M9 = [2 ** x for x in result_M9]
     
-    model.load_weights('weight_CNN_LB.h5')
+    model.load_weights('weight_CNN_LB_small2.h5')
     result_LB = model.predict(sequence_onehot, verbose=0)[:,0]
     result_LB = [2 ** x for x in result_LB]
     return result_M9, result_LB
