@@ -107,7 +107,7 @@ def get_data():
     control = []
     for i in range(15):
         dict_name = 'file_' + str(i)
-        file = pd.read_excel(open('deal_data_.xlsx', 'rb'),
+        file = pd.read_excel(open('./data/deal_data_.xlsx', 'rb'),
                   sheet_name = str(i+1) + '-1-94')  
         file = file.dropna(subset=['Tube Name:'])
         record_dict[dict_name] = file
