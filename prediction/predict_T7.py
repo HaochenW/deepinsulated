@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
-# -*- coding: utf-8 -*-
-
-from tensorflow.keras import optimizers
+from keras import optimizers
 from keras.models import Sequential
 from keras.callbacks import EarlyStopping,ModelCheckpoint
 from keras.layers import Dense
@@ -12,7 +9,7 @@ from keras.layers.core import Activation
 from keras.layers.convolutional import UpSampling2D
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers.core import Flatten
-from tensorflow.keras.optimizers import SGD
+from keras.optimizers import SGD
 from keras.datasets import mnist
 import numpy as np
 from PIL import Image
