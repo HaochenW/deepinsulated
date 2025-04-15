@@ -108,7 +108,7 @@ Remarkably, the landscape accurately depicted the transcriptional activity of th
 
 ## Prediction, Design and Visualize Promoter Sequence <a name="design-promoter-sequence">
 
-### 1. Training the prediction model
+### 1. Training the prediction model (For K1.5)
     ```
     cd prediction
     python predict_parallel.py
