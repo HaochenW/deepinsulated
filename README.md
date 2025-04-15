@@ -25,7 +25,7 @@ Remarkably, the landscape accurately depicted the transcriptional activity of th
 ## Environment Setup <a name="environment-setup">
 **Env Requirements:** 
 - MAC OS, Linux or Windows.
-- Python 3.5+.
+- Python 3.6.
 - Tensorflow 1.10.0 + keras 2.1.0
 - CUDA 9.0  if you need train deep learning model with gpu.
 
