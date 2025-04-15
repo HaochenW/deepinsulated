@@ -114,10 +114,15 @@ Remarkably, the landscape accurately depicted the transcriptional activity of th
     python predict_parallel.py
     ```
     
-### 2. De novo design / Semi-rational design the sequences
+### 2.1 De novo design the sequences
     ```
     cd design
-    python de_novo_design.py or
+    python de_novo_design.py
+    ```
+
+### 2.2 Semi-rational design the sequences
+    ```
+    cd design
     python semi_rational_design.py
     ```
 
