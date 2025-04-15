@@ -139,7 +139,7 @@ Please consider citing our paper in your publications if the project helps your 
 
 ```
 @article{,
-  title={De novo design of insulated _cis_-regulatory elements based on deep learning-predicted fitness landscape**},
+  title={De novo design of insulated _cis_-regulatory elements based on deep learning-predicted fitness landscape},
   author={Haochen Wang, Yanhui Xiang, Ziming Liu, Wen Yin,  Boyan Li, Long Qian, Xiaowo Wang, Chunbo Lou},
   journal={},
   year={2024}
