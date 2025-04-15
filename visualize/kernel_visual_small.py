@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Wed Jul  6 09:16:25 2022
+
+@author: hcwan
+"""
+
+# -*- coding: utf-8 -*-
 
 
 
@@ -58,7 +65,7 @@ def get_data():
     control = []
     for i in range(15):
         dict_name = 'file_' + str(i)
-        file = pd.read_excel(open('deal_data_.xlsx', 'rb'),
+        file = pd.read_excel(open('../data/deal_data_.xlsx', 'rb'),
                   sheet_name = str(i+1) + '-1-94')  
         file = file.dropna(subset=['Tube Name:'])
         record_dict[dict_name] = file
@@ -121,14 +128,14 @@ class Feature_extracter:
     
     def extract_featuremap(self, info_input, layer_num, model_weight_path):
         self.model.load_weights(model_weight_path)
-        outputs = [layer.output for layer in self.model.layers]
-        active_func = K.function([self.model.input], [outputs])
-        activations = active_func(info_input)[0]
-        feature_map = activations[0][layer_num]
+        outputs = [self.model.layers[layer_num].output]  
+        active_func = K.function([self.model.input], outputs)
+        activations = active_func([info_input])
+        feature_map = activations[0]  
         return feature_map
 
 def read_experiment3():
-    file = pd.read_excel(open('2022.6.28__all prediction.xlsx', 'rb'),
+    file = pd.read_excel(open('all_prediction.xlsx', 'rb'),
                          sheet_name = "去除诱导前预测")  
     file = file.dropna(subset=['sequence'])
     original_predictexp = file[' old_exp_LB']
@@ -138,11 +145,19 @@ def read_experiment3():
     experiment_increased = file['差值']
     return sequence, original_predictexp, experiment_exp, control, experiment_increased
 
+
+def read_mutation_experiment():
+    file = pd.read_csv('Sequence with fixed expression new.csv')
+    sequence = list(file['sequence'])
+    sequence_start = list(file['start_sequence'])
+    return sequence, sequence_start
+    
+
     
 
 if __name__ == '__main__': 
     # Load the model
-    weight_path = '../weight/weight_CNN_K1_5.h5'
+    weight_path = 'weight_CNN_LB_small.h5'
     model = CNN_model_small(promoter_length = 31)
     model.load_weights(weight_path)
     
@@ -172,11 +187,11 @@ if __name__ == '__main__':
     feature_map4 = feature_map4.reshape(len(onehot),15,5)
     m = feature_map4.max(axis=1)
     m_pos = feature_map4.argmax(axis=1)
-    # onehot = onehot.reshape(len(onehot),len(onehot[0]),4)
+    onehot = onehot.reshape(len(onehot),len(onehot[0]),4)
     pad = np.ones((14, 4)) * np.array([0, 0, 0, 0])
     
     
-    exp = model.predict(onehot)
+    exp = LB_exp
 
     for i in range(4):
         for j in range(4):
@@ -199,7 +214,7 @@ if __name__ == '__main__':
                 zi = interpolator(Xi, Yi)
                 np.savez("mat_Kernel {} and Kernel {}.npz".format(str(i+1), str(j+1)), name1=Xi, name2=Yi, name3 = zi)
                 
-                np.savez("experimental_mat_Kernel {} and Kernel {}.npz".format(str(i+1), str(j+1)),name1=dim1,name2=dim2,name3=LB_exp)
+                np.savez("original_mat_Kernel {} and Kernel {}.npz".format(str(i+1), str(j+1)),name1=dim1,name2=dim2,name3=LB_exp)
                 
     # 100余个实验数据点
     sequence, original_predictexp, experiment_exp, control, experiment_increased= read_experiment3()
@@ -207,7 +222,7 @@ if __name__ == '__main__':
     onehot_exper = seq2onehot(sequence)
     feature_extractor = Feature_extracter(model)
     feature_map4 = feature_extractor.extract_featuremap(onehot_exper, 7, weight_path)
-    feature_map4 = feature_map4.reshape(len(onehot_exper,),15,5)
+    feature_map4 = feature_map4.reshape(len(onehot_exper),15,5)
     m = feature_map4.max(axis=1)
     m_pos = feature_map4.argmax(axis=1)
     onehot = onehot.reshape(len(onehot),len(onehot[0]),4)
@@ -220,9 +235,27 @@ if __name__ == '__main__':
                 dim2 = np.max(feature_map4[:,:,j], axis = 1)
                 np.savez("original_mat_Kernel {} and Kernel {}.npz".format(str(i+1), \
                     str(j+1)),name1=dim1,name2=dim2,name3=experiment_exp)
- 
-    
-    
+
+
+    # Mutation的起点和终点
+    sequence_mutation, sequence_start = read_mutation_experiment()
+    sequence_all = sequence_mutation + sequence_start
+    onehot_exper = seq2onehot(sequence_all)
+    feature_extractor = Feature_extracter(model)
+    feature_map4 = feature_extractor.extract_featuremap(onehot_exper, 7, weight_path)
+    feature_map4 = feature_map4.reshape(len(onehot_exper),15,5)
+    m = feature_map4.max(axis=1)
+    m_pos = feature_map4.argmax(axis=1)
+    onehot = onehot_exper.reshape(len(onehot_exper),len(onehot_exper[0]),4)
+    pad = np.ones((14, 4)) * np.array([0, 0, 0, 0])
+
+    for i in range(4):
+        for j in range(4):
+            if  i < j:
+                dim1 = np.max(feature_map4[:,:,i], axis = 1)
+                dim2 = np.max(feature_map4[:,:,j], axis = 1)
+                np.savez("sequence_mutation_mat_Kernel {} and Kernel {}.npz".format(str(i+1), \
+                    str(j+1)),name1=dim1,name2=dim2,name3=experiment_exp)
     
     
     
