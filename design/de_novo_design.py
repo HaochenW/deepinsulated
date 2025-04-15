@@ -121,7 +121,7 @@ def get_data():
     return sequence,LB_exp,M9_exp,control,record_dict,record_average
 
 def read_experiment1():
-    test_file = 'Sequence with fixed expression new(1).csv'
+    test_file = 'Sequence with fixed expression new.csv'
     info = pd.read_table(test_file,sep=',')
     start_seq = info['most_similar_sequence']
     end_seq = info['sequence']
