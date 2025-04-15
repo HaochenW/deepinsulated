@@ -27,7 +27,7 @@ Remarkably, the landscape accurately depicted the transcriptional activity of th
 - MAC OS, Linux or Windows.
 - Python 3.5+.
 - Tensorflow 1.10.0 + keras 2.10.0
-- CUDA 1.10.0  if you need train deep learning model with gpu.
+- CUDA 9.0  if you need train deep learning model with gpu.
 
 **Steps of using DeepInsulated:** 
 
