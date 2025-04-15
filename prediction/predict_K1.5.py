@@ -83,7 +83,6 @@ def seq2onehot(seq):
         for letter in item:
             tmp.append(ref[letter])
         onehot.append(tmp)
-        # 不足部分补0占位
     return np.array(onehot)
 
 
