@@ -24,7 +24,6 @@ import math
 random_seed = 1000
 
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 
 def CNN_model_small(promoter_length):
@@ -107,7 +106,7 @@ def get_data():
     control = []
     for i in range(15):
         dict_name = 'file_' + str(i)
-        file = pd.read_excel(open('./data/deal_data_.xlsx', 'rb'),
+        file = pd.read_excel(open('../data/deal_data_.xlsx', 'rb'),
                   sheet_name = str(i+1) + '-1-94')  
         file = file.dropna(subset=['Tube Name:'])
         record_dict[dict_name] = file
@@ -174,7 +173,7 @@ if __name__ == '__main__':
     input_img = np.float64(input_img)
 
     lr = 1.  # learning rate used for gradient updates
-    max_iter = 1000  # number of gradient updates iterations
+    max_iter = 100  # number of gradient updates iterations
     for i in range(max_iter):
         loss_val, grads_val = func([input_img])
         input_img += grads_val * lr  # update the image based on gradients
