@@ -193,14 +193,12 @@ def cnn_model(promoter_length):
     model.add(Activation('relu'))
     
     # Fourth convolutional block
-    model.add(Conv2D(200, (5, 1), padding='same'))
+    model.add(Conv2D(5, (5, 1), padding='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 1)))
     
     # Fully connected layers
     model.add(Flatten())
-    model.add(Dense(1024))
-    model.add(Activation('tanh'))
     model.add(Dense(1))
     
     return model
