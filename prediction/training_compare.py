@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Mar 15 20:39:10 2025
 
-@author: hcwan
-"""
 
 # -*- coding: utf-8 -*-
 
