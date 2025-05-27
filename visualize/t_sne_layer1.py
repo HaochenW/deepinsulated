@@ -622,7 +622,7 @@ if __name__ == '__main__':
             dominant_count = np.max(counts[1])
             purity = dominant_count / len(idx)
     
-            if purity >= purity_threshold:
+            if purity > purity_threshold:
                 sub_co = co_matrix[np.ix_(idx, idx)]
                 avg_val = np.mean(sub_co)
                 pure_clusters.append((idx, avg_val))
