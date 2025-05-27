@@ -396,6 +396,8 @@ if __name__ == '__main__':
     from sklearn.manifold import TSNE
     from sklearn.decomposition import PCA
     
+    
+    seed = 35
     # Assuming pfm_record_diff and pfm_record_origin are your datasets
     # with shapes (100, 20)
     # pfm_record_diff = np.array(pfm_record_diff).reshape(len(pfm_record_diff), -1)
@@ -405,7 +407,7 @@ if __name__ == '__main__':
     combined_data = np.vstack((pfm_record_diff, pfm_record_origin))
     
     # Perform t-SNE
-    tsne = TSNE(n_components=2, random_state=40)
+    tsne = TSNE(n_components=2, random_state=seed)
     # tsne = TSNE(n_components=2, perplexity=30, learning_rate=50, n_iter=1000, random_state=42)
     reduced_data = tsne.fit_transform(combined_data)
     
@@ -468,7 +470,7 @@ if __name__ == '__main__':
     max_k = min(30, len(combined_data) - 1)
     
     for k in range(5, max_k):
-        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans = KMeans(n_clusters=k, random_state=seed)
         labels = kmeans.fit_predict(combined_data)  
         score = silhouette_score(combined_data, labels)
         if score > best_score:
@@ -478,7 +480,7 @@ if __name__ == '__main__':
             best_centers = kmeans.cluster_centers_
     
     # Visualization in t-SNE space (reduced_data)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(6, 6))
     for i in range(best_k):
         idx = np.where(best_labels == i)[0]
         cluster_points = reduced_data[idx]
@@ -520,7 +522,7 @@ if __name__ == '__main__':
     plt.title('Pure Clusters (Only diff or only origin)')
     plt.xlabel('t-SNE Component 1')
     plt.ylabel('t-SNE Component 2')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.xlim(xlim)
     plt.ylim(ylim)
     plt.tight_layout()
@@ -529,18 +531,190 @@ if __name__ == '__main__':
 
 
 
+    # Consensus clustering
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from sklearn.cluster import KMeans, SpectralClustering
+    from sklearn.metrics import silhouette_score
+    from sklearn.manifold import TSNE
     
+    # ==== Step 0: Prepare data ====
+    # Assume combined_data contains 200 samples (first 100 are 'diff', next 100 are 'origin')
+    # Assume reduced_data is the t-SNE embedding of combined_data
     
+    # Generate sample type labels (unshuffled)
+    labels_diff_origin = np.array(['diff'] * 100 + ['origin'] * 100)
     
+    # Reorder samples based on motif order (pre-sorting for consistency)
+    motif_order = np.argsort(motif_order)
+    motif_order_origin = np.argsort(motif_order_origin)
     
+    sorted_indices = np.concatenate([
+        motif_order,                  # Sorted 'diff' indices (0–99)
+        motif_order_origin + 100     # Sorted 'origin' indices (100–199)
+    ])
     
+    # Reorder data and labels
+    combined_data = combined_data[sorted_indices]
+    reduced_data = reduced_data[sorted_indices]
+    labels_diff_origin = labels_diff_origin[sorted_indices]
     
+    # ==== Step 1: Perform multiple clustering runs to build consensus matrix ====
+    n_runs = 100
+    seed = 42
+    max_k = min(30, len(combined_data) - 1)
+    best_k = 0
+    best_score = -1
     
+    # Choose optimal number of clusters based on silhouette score
+    for k in range(5, max_k):
+        kmeans = KMeans(n_clusters=k, random_state=seed)
+        labels = kmeans.fit_predict(combined_data)
+        score = silhouette_score(combined_data, labels)
+        if score > best_score:
+            best_score = score
+            best_k = k
     
+    print(f"Best k chosen: {best_k}")
     
+    # Initialize consensus matrix and label tracker
+    n_samples = len(combined_data)
+    co_matrix = np.zeros((n_samples, n_samples))
+    label_matrix = np.zeros((n_runs, n_samples), dtype=int)
     
+    # Accumulate co-occurrence counts only for pure clusters
+    for run in range(n_runs):
+        kmeans = KMeans(n_clusters=best_k, random_state=run)
+        labels = kmeans.fit_predict(combined_data)
+        label_matrix[run] = labels
     
+        for cluster_id in np.unique(labels):
+            idx = np.where(labels == cluster_id)[0]
+            types = labels_diff_origin[idx]
     
+            # Skip mixed clusters (containing both 'diff' and 'origin')
+            if len(np.unique(types)) > 1:
+                continue
+    
+            # Update co-occurrence counts for pure cluster
+            for i in idx:
+                for j in idx:
+                    co_matrix[i, j] += 1
+    
+    # Normalize to [0, 1] range
+    co_matrix /= n_runs
+    
+    # ==== Step 2: Identify top pure clusters based on average consensus ====
+    min_cluster_size = 3
+    purity_threshold = 1.0  # Require 100% purity (same label)
+    
+    pure_clusters = []  # Store (sample indices, average consensus value) for each pure cluster
+    
+    for run in range(n_runs):
+        labels = label_matrix[run]
+        for cluster_id in np.unique(labels):
+            idx = np.where(labels == cluster_id)[0]
+            if len(idx) < min_cluster_size:
+                continue
+    
+            types = labels_diff_origin[idx]
+            counts = np.unique(types, return_counts=True)
+            dominant_count = np.max(counts[1])
+            purity = dominant_count / len(idx)
+    
+            if purity >= purity_threshold:
+                sub_co = co_matrix[np.ix_(idx, idx)]
+                avg_val = np.mean(sub_co)
+                pure_clusters.append((idx, avg_val))
+    
+    # Ensure sufficient pure clusters found
+    if len(pure_clusters) < 2:
+        raise ValueError("Less than 2 pure clusters found.")
+    
+    # Select top 100 clusters with highest average internal consensus
+    top_clusters = sorted(pure_clusters, key=lambda x: x[1], reverse=True)[:100]
+    
+    # Combine sample indices from top clusters
+    pure_indices = sorted(list(set(np.concatenate([c[0] for c in top_clusters]))))
+    
+    # ==== Step 3: Second-stage clustering on pure clusters ====
+    pure_indices = sorted(list(pure_indices))  # Ensure 1D sorted index list
+    pure_co_matrix = co_matrix[np.ix_(pure_indices, pure_indices)]
+    
+    # Perform spectral clustering on the refined consensus matrix
+    n_clusters_pure = 2
+    clustering = SpectralClustering(n_clusters=n_clusters_pure,
+                                     affinity='precomputed',
+                                     random_state=seed)
+    final_labels = clustering.fit_predict(pure_co_matrix)
+    
+    # ==== Step 4: Visualize clustering results in t-SNE space ====
+    pure_reduced_data = reduced_data[pure_indices]
+    
+    plt.figure(figsize=(8, 6))
+    for i in np.unique(final_labels):
+        idx = np.where(final_labels == i)[0]
+        plt.scatter(pure_reduced_data[idx, 0], pure_reduced_data[idx, 1],
+                    label=f'Consensus Cluster {i}', alpha=0.7)
+    
+    plt.title('Second-Stage Consensus Clustering (on Pure Clusters)')
+    plt.xlabel('t-SNE Component 1')
+    plt.ylabel('t-SNE Component 2')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    plt.tight_layout()
+    plt.savefig('consensus_on_pure_clusters.pdf', dpi=600)
+    plt.show()
+
+
+        
+    # ==== Visualize Consensus Matrix as clean grid-style PDF ====
+    import matplotlib.pyplot as plt
+    
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    # Display consensus matrix in grayscale
+    im = ax.imshow(co_matrix, cmap='Greys', interpolation='none', vmin=0, vmax=1)
+    
+    # Y-axis: show ticks on the left (diff part)
+    yticks = [0, 20, 40, 60, 80, 99]
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticks)
+    
+    # X-axis: move tick labels to the right side (origin part)
+    xticks = [100, 120, 140, 160, 180, 199]
+    xticklabels = [0, 20, 40, 60, 80, 100]
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticklabels)
+    
+    # Axis labels
+    ax.set_xlabel("diff (left) → origin (shown)", fontsize=12)
+    ax.set_ylabel("diff", fontsize=12)
+    
+    # Add gridlines
+    n = co_matrix.shape[0]
+    ax.set_xticks(np.arange(-0.5, n, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, n, 1), minor=True)
+    ax.grid(which='minor', color='lightgray', linestyle='-', linewidth=0.5)
+    ax.tick_params(which='minor', bottom=False, left=False)
+    
+    # Add red line to split diff and origin
+    ax.axhline(y=99.5, color='red', linewidth=1)
+    ax.axvline(x=99.5, color='red', linewidth=1)
+    
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label('Consensus Score', fontsize=12)
+    
+    plt.title('Consensus Matrix (diff vs origin)', fontsize=14)
+    plt.tight_layout()
+    plt.savefig('consensus_matrix_shifted_xticks.pdf', dpi=600)
+    plt.show()
+
+
+
+
+
+
     
     
     
